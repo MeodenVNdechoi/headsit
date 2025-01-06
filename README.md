@@ -5,6 +5,7 @@ local textBox = Instance.new("TextBox")
 local toggleButton = Instance.new("TextButton")
 local headsitEnabled = false
 
+-- Tạo GUI
 screenGui.Parent = player:WaitForChild("PlayerGui")
 frame.Parent = screenGui
 frame.Size = UDim2.new(0, 200, 0, 150)
@@ -12,6 +13,8 @@ frame.Position = UDim2.new(0.5, -100, 0.5, -75)
 frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 frame.BorderSizePixel = 0
 frame.BackgroundTransparency = 0.3
+frame.Active = true
+frame.Draggable = true -- Cho phép di chuyển GUI
 
 textBox.Parent = frame
 textBox.Size = UDim2.new(0, 180, 0, 30)
@@ -31,6 +34,7 @@ toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.BackgroundColor3 = Color3.fromRGB(60, 120, 200)
 toggleButton.BorderSizePixel = 0
 
+-- Kết nối sự kiện nhấn nút
 toggleButton.MouseButton1Click:Connect(function()
     local targetName = textBox.Text
     local targetPlayer = game.Players:FindFirstChild(targetName)
@@ -56,15 +60,28 @@ toggleButton.MouseButton1Click:Connect(function()
     toggleButton.Text = headsitEnabled and "Tắt Headsit" or "Bật Headsit"
 
     if headsitEnabled then
-        local weld = Instance.new("WeldConstraint")
-        weld.Part0 = character:WaitForChild("HumanoidRootPart")
-        weld.Part1 = targetCharacter:WaitForChild("Head")
-        weld.Parent = weld.Part0
-        character.HumanoidRootPart.CFrame = targetCharacter.Head.CFrame * CFrame.new(0, 1.5, 0)
+        -- Tạo Attachment và AlignPosition để nhân vật ngồi đúng vị trí và di chuyển theo
+        local alignPos = Instance.new("AlignPosition")
+        local attach0 = Instance.new("Attachment")
+        local attach1 = Instance.new("Attachment")
+        
+        attach0.Parent = character.HumanoidRootPart
+        attach1.Parent = targetCharacter.Head
+        
+        alignPos.Attachment0 = attach0
+        alignPos.Attachment1 = attach1
+        alignPos.RigidityEnabled = true
+        alignPos.MaxForce = 25000
+        alignPos.Responsiveness = 50
+        alignPos.Parent = character.HumanoidRootPart
+        
+        -- Đặt nhân vật lên trên đầu
+        character.HumanoidRootPart.CFrame = targetCharacter.Head.CFrame * CFrame.new(0, 2, 0)
     else
-        for _, weld in pairs(character.HumanoidRootPart:GetChildren()) do
-            if weld:IsA("WeldConstraint") then
-                weld:Destroy()
+        -- Xóa tất cả AlignPosition và Attachment
+        for _, obj in pairs(character.HumanoidRootPart:GetChildren()) do
+            if obj:IsA("AlignPosition") or obj:IsA("Attachment") then
+                obj:Destroy()
             end
         end
     end
